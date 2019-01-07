@@ -12,9 +12,9 @@
 #include <cstddef>
 #include <memory>
 #include <random>
+#include <fstream>
 
-namespace seal
-{
+namespace seal {
     /**
     Class to store a secret key.
 
@@ -29,8 +29,7 @@ namespace seal
     @see RelinKeys for the class that stores the relinearization keys.
     @see GaloisKeys for the class that stores the Galois keys.
     */
-    class SecretKey
-    {
+    class SecretKey {
         friend class KeyGenerator;
 
     public:
@@ -42,12 +41,11 @@ namespace seal
         /**
         Overwrites the key data by random data and destroys the SecretKey object. 
         */
-        ~SecretKey() noexcept
-        {
+        ~SecretKey() noexcept {
             // We use a default factory from std::random_device to make sure
             // randomize_key does not throw.
             static std::unique_ptr<UniformRandomGeneratorFactory> random_factory(
-                std::make_unique<StandardRandomAdapterFactory<std::random_device>>());
+                    std::make_unique<StandardRandomAdapterFactory<std::random_device>>());
             randomize_secret(random_factory->create());
         }
 
@@ -70,8 +68,7 @@ namespace seal
 
         @param[in] assign The SecretKey to copy from
         */
-        SecretKey &operator =(const SecretKey &assign)
-        {
+        SecretKey &operator=(const SecretKey &assign) {
             sk_ = assign.sk_;
             return *this;
         }
@@ -81,21 +78,19 @@ namespace seal
 
         @param[in] assign The SecretKey to move from
         */
-        SecretKey &operator =(SecretKey &&assign) = default;
+        SecretKey &operator=(SecretKey &&assign) = default;
 
         /**
         Returns a reference to the underlying polynomial.
         */
-        inline auto &data() noexcept
-        {
+        inline auto &data() noexcept {
             return sk_;
         }
 
         /**
         Returns a const reference to the underlying polynomial.
         */
-        inline auto &data() const noexcept
-        {
+        inline auto &data() const noexcept {
             return sk_;
         }
 
@@ -107,16 +102,14 @@ namespace seal
 
         @param[in] context The SEALContext
         */
-        inline bool is_valid_for(std::shared_ptr<SEALContext> context) const 
-        {
+        inline bool is_valid_for(std::shared_ptr<SEALContext> context) const {
             // Verify parameters
-            if (!context || !context->parameters_set())
-            {
+            if (!context || !context->parameters_set()) {
                 return false;
             }
             auto parms_id = context->first_parms_id();
-            return sk_.is_valid_for(std::move(context)) && 
-                sk_.is_ntt_form() && sk_.parms_id() == parms_id;
+            return sk_.is_valid_for(std::move(context)) &&
+                   sk_.is_ntt_form() && sk_.parms_id() == parms_id;
         }
 
         /**
@@ -126,8 +119,7 @@ namespace seal
         @param[in] stream The stream to save the SecretKey to
         @throws std::exception if the plaintext could not be written to stream
         */
-        inline void save(std::ostream &stream) const
-        {
+        inline void save(std::ostream &stream) const {
             sk_.save(stream);
         }
 
@@ -140,9 +132,31 @@ namespace seal
         @param[in] stream The stream to load the SecretKey from
         @throws std::exception if a valid SecretKey could not be read from stream
         */
-        inline void unsafe_load(std::istream &stream)
-        {
+        inline void unsafe_load(std::istream &stream) {
             sk_.unsafe_load(stream);
+        }
+
+        /**
+         * Used by wrapper libraries to load.
+         */
+        inline void python_save(std::string &path) const {
+            std::ofstream out(path);
+            save(out);
+            out.close();
+        }
+        inline void python_load(std::shared_ptr<SEALContext> context,
+                                std::string &path) {
+            std::ifstream in(path);
+            load(context, in);
+            in.close();
+        }
+        inline void python_load(std::string &path) {
+            std::ifstream in(path);
+            unsafe_load(in);
+            in.close();
+        }
+        inline void load(std::istream &stream) {
+            unsafe_load(stream);
         }
 
         /**
@@ -158,11 +172,9 @@ namespace seal
         context
         */
         inline void load(std::shared_ptr<SEALContext> context,
-            std::istream &stream)
-        {
+                         std::istream &stream) {
             unsafe_load(stream);
-            if (!is_valid_for(std::move(context)))
-            {
+            if (!is_valid_for(std::move(context))) {
                 throw std::invalid_argument("SecretKey data is invalid");
             }
         }
@@ -172,8 +184,7 @@ namespace seal
 
         @see EncryptionParameters for more information about parms_id.
         */
-        inline auto &parms_id() noexcept
-        {
+        inline auto &parms_id() noexcept {
             return sk_.parms_id();
         }
 
@@ -182,30 +193,25 @@ namespace seal
 
         @see EncryptionParameters for more information about parms_id.
         */
-        inline auto &parms_id() const noexcept
-        {
+        inline auto &parms_id() const noexcept {
             return sk_.parms_id();
         }
 
         /**
         Returns the currently used MemoryPoolHandle.
         */
-        inline MemoryPoolHandle pool() const noexcept
-        {
+        inline MemoryPoolHandle pool() const noexcept {
             return sk_.pool();
         }
 
     private:
         inline void randomize_secret(
-            std::shared_ptr<UniformRandomGenerator> random) noexcept
-        {
+                std::shared_ptr<UniformRandomGenerator> random) noexcept {
             std::size_t capacity = sk_.capacity();
-            volatile SEAL_BYTE *data_ptr = reinterpret_cast<SEAL_BYTE*>(sk_.data());
-            while (capacity--)
-            {
+            volatile SEAL_BYTE *data_ptr = reinterpret_cast<SEAL_BYTE *>(sk_.data());
+            while (capacity--) {
                 std::size_t pt_coeff_byte_count = sizeof(Plaintext::pt_coeff_type);
-                while (pt_coeff_byte_count--)
-                {
+                while (pt_coeff_byte_count--) {
                     *data_ptr++ = static_cast<SEAL_BYTE>(random->generate());
                 }
             }
@@ -214,6 +220,6 @@ namespace seal
         /**
         We use a fresh memory pool with `clear_on_destruction' enabled
         */
-        Plaintext sk_{ MemoryManager::GetPool(mm_prof_opt::FORCE_NEW, true) };
+        Plaintext sk_{MemoryManager::GetPool(mm_prof_opt::FORCE_NEW, true)};
     };
 }

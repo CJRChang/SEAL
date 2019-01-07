@@ -8,6 +8,7 @@
 #include <iostream>
 #include <algorithm>
 #include <memory>
+#include <fstream>
 #include "seal/util/common.h"
 #include "seal/util/polycore.h"
 #include "seal/util/defines.h"
@@ -555,6 +556,29 @@ namespace seal
             {
                 throw std::invalid_argument("Plaintext data is invalid");
             }
+        }
+
+        /**
+         * Used by wrapper libraries to load.
+         */
+        inline void python_save(std::string &path) const {
+            std::ofstream out(path);
+            save(out);
+            out.close();
+        }
+        inline void python_load(std::shared_ptr<SEALContext> context,
+                                std::string &path) {
+            std::ifstream in(path);
+            load(context, in);
+            in.close();
+        }
+        inline void python_load(std::string &path) {
+            std::ifstream in(path);
+            unsafe_load(in);
+            in.close();
+        }
+        inline void load(std::istream &stream) {
+            unsafe_load(stream);
         }
 
         /**

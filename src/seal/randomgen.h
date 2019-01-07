@@ -84,7 +84,7 @@ namespace seal
     Provides an implementation of UniformRandomGenerator for using very fast 
     AES-NI randomness with given 128-bit seed.
     */
-    class FastPRNG : public UniformRandomGenerator
+    class FastPRNG : public UniformRandomGenerator, public std::enable_shared_from_this<FastPRNG>
     {
     public:
         /**
@@ -146,7 +146,7 @@ namespace seal
         }
     };
 
-    class FastPRNGFactory : public UniformRandomGeneratorFactory
+    class FastPRNGFactory : public UniformRandomGeneratorFactory, public std::enable_shared_from_this<FastPRNGFactory>
     {
     public:
         /**

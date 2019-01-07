@@ -5,11 +5,11 @@
 
 #include <iostream>
 #include <memory>
+#include <fstream>
 #include "seal/ciphertext.h"
 #include "seal/context.h"
 
-namespace seal
-{
+namespace seal {
     /**
     Class to store a public key.
 
@@ -23,8 +23,7 @@ namespace seal
     @see RelinKeys for the class that stores the relinearization keys.
     @see GaloisKeys for the class that stores the Galois keys.
     */
-    class PublicKey
-    {
+    class PublicKey {
         friend class KeyGenerator;
 
     public:
@@ -52,28 +51,26 @@ namespace seal
 
         @param[in] assign The PublicKey to copy from
         */
-        PublicKey &operator =(const PublicKey &assign) = default;
+        PublicKey &operator=(const PublicKey &assign) = default;
 
         /**
         Moves an old PublicKey to the current one.
 
         @param[in] assign The PublicKey to move from
         */
-        PublicKey &operator =(PublicKey &&assign) = default;
+        PublicKey &operator=(PublicKey &&assign) = default;
 
         /**
         Returns a reference to the underlying data.
         */
-        inline auto &data() noexcept
-        {
+        inline auto &data() noexcept {
             return pk_;
         }
 
         /**
         Returns a const reference to the underlying data.
         */
-        inline auto &data() const noexcept
-        {
+        inline auto &data() const noexcept {
             return pk_;
         }
 
@@ -85,16 +82,14 @@ namespace seal
 
         @param[in] context The SEALContext
         */
-        inline bool is_valid_for(std::shared_ptr<SEALContext> context) const noexcept
-        {
+        inline bool is_valid_for(std::shared_ptr<SEALContext> context) const noexcept {
             // Verify parameters
-            if (!context || !context->parameters_set())
-            {
+            if (!context || !context->parameters_set()) {
                 return false;
             }
             auto parms_id = context->first_parms_id();
-            return pk_.is_valid_for(std::move(context)) && 
-                pk_.is_ntt_form() && pk_.parms_id() == parms_id;
+            return pk_.is_valid_for(std::move(context)) &&
+                   pk_.is_ntt_form() && pk_.parms_id() == parms_id;
         }
 
         /**
@@ -104,8 +99,7 @@ namespace seal
         @param[in] stream The stream to save the PublicKey to
         @throws std::exception if the PublicKey could not be written to stream
         */
-        inline void save(std::ostream &stream) const
-        {
+        inline void save(std::ostream &stream) const {
             pk_.save(stream);
         }
 
@@ -118,9 +112,31 @@ namespace seal
         @param[in] stream The stream to load the PublicKey from
         @throws std::exception if a valid PublicKey could not be read from stream
         */
-        inline void unsafe_load(std::istream &stream)
-        {
+        inline void unsafe_load(std::istream &stream) {
             pk_.unsafe_load(stream);
+        }
+
+        /**
+         * Used by wrapper libraries to load.
+         */
+        inline void python_save(std::string &path) const {
+            std::ofstream out(path);
+            save(out);
+            out.close();
+        }
+        inline void python_load(std::shared_ptr<SEALContext> context,
+                                std::string &path) {
+            std::ifstream in(path);
+            load(context, in);
+            in.close();
+        }
+        inline void python_load(std::string &path) {
+            std::ifstream in(path);
+            unsafe_load(in);
+            in.close();
+        }
+        inline void load(std::istream &stream) {
+            unsafe_load(stream);
         }
 
         /**
@@ -136,11 +152,9 @@ namespace seal
         context
         */
         inline void load(std::shared_ptr<SEALContext> context,
-            std::istream &stream)
-        {
+                         std::istream &stream) {
             unsafe_load(stream);
-            if (!is_valid_for(std::move(context)))
-            {
+            if (!is_valid_for(std::move(context))) {
                 throw std::invalid_argument("PublicKey data is invalid");
             }
         }
@@ -148,24 +162,21 @@ namespace seal
         /**
         Returns a reference to parms_id.
         */
-        inline auto &parms_id() noexcept
-        {
+        inline auto &parms_id() noexcept {
             return pk_.parms_id();
         }
 
         /**
         Returns a const reference to parms_id.
         */
-        inline auto &parms_id() const noexcept
-        {
+        inline auto &parms_id() const noexcept {
             return pk_.parms_id();
         }
 
         /**
         Returns the currently used MemoryPoolHandle.
         */
-        inline MemoryPoolHandle pool() const noexcept
-        {
+        inline MemoryPoolHandle pool() const noexcept {
             return pk_.pool();
         }
 

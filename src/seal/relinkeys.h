@@ -226,6 +226,29 @@ namespace seal
         }
 
         /**
+         * Used by wrapper libraries to load.
+         */
+        inline void python_save(std::string &path) const {
+            std::ofstream out(path);
+            save(out);
+            out.close();
+        }
+        inline void python_load(std::shared_ptr<SEALContext> context,
+                                std::string &path) {
+            std::ifstream in(path);
+            load(context, in);
+            in.close();
+        }
+        inline void python_load(std::string &path) {
+            std::ifstream in(path);
+            unsafe_load(in);
+            in.close();
+        }
+        inline void load(std::istream &stream) {
+            unsafe_load(stream);
+        }
+
+        /**
         Returns the currently used MemoryPoolHandle.
         */
         inline MemoryPoolHandle pool() const noexcept
