@@ -8,6 +8,7 @@
 #include <iostream>
 #include <algorithm>
 #include <memory>
+#include <fstream>
 #include "seal/util/defines.h"
 #include "seal/context.h"
 #include "seal/memorymanager.h"
@@ -554,6 +555,29 @@ namespace seal
         }
 
         /**
+         * Used by wrapper libraries to load.
+         */
+        inline void python_save(std::string &path) const {
+            std::ofstream out(path);
+            save(out);
+            out.close();
+        }
+        inline void python_load(std::shared_ptr<SEALContext> context,
+                                std::string &path) {
+            std::ifstream in(path);
+            load(context, in);
+            in.close();
+        }
+        inline void python_load(std::string &path) {
+            std::ifstream in(path);
+            unsafe_load(in);
+            in.close();
+        }
+        inline void load(std::istream &stream) {
+            unsafe_load(stream);
+        }
+
+        /**
         Returns whether the ciphertext is in NTT form.
         */
         inline bool is_ntt_form() const noexcept
@@ -606,6 +630,11 @@ namespace seal
         inline auto &scale() const noexcept
         {
             return scale_;
+        }
+
+        // Work around for re-writing scale from python
+        inline void python_set_scale(double scale) {
+            scale_ = scale;
         }
 
         /**

@@ -9,7 +9,12 @@ using namespace seal::util;
 
 namespace seal
 {
-    void EncryptionParameters::Save(const EncryptionParameters &parms, ostream &stream)
+    EncryptionParameters::EncryptionParameters()
+    {
+        compute_parms_id();
+    }
+
+    void EncryptionParameters::save(ostream &stream)
     {
         // Throw exceptions on std::ios_base::badbit and std::ios_base::failbit
         auto old_except_mask = stream.exceptions();
@@ -17,19 +22,19 @@ namespace seal
         {
             stream.exceptions(ios_base::badbit | ios_base::failbit);
 
-            uint64_t poly_modulus_degree64 = static_cast<uint64_t>(parms.poly_modulus_degree());
-            uint64_t coeff_mod_count64 = static_cast<uint64_t>(parms.coeff_modulus().size());
-            auto scheme = parms.scheme();
+            uint64_t poly_modulus_degree64 = static_cast<uint64_t>(this->poly_modulus_degree());
+            uint64_t coeff_mod_count64 = static_cast<uint64_t>(this->coeff_modulus().size());
+            auto scheme = this->scheme();
 
             stream.write(reinterpret_cast<const char*>(&scheme), sizeof(scheme_type));
             stream.write(reinterpret_cast<const char*>(&poly_modulus_degree64), sizeof(uint64_t));
             stream.write(reinterpret_cast<const char*>(&coeff_mod_count64), sizeof(uint64_t));
-            for (const auto &mod : parms.coeff_modulus())
+            for (const auto &mod : this->coeff_modulus())
             {
                 mod.save(stream);
             }
-            parms.plain_modulus().save(stream);
-            double noise_standard_deviation = parms.noise_standard_deviation();
+            this->plain_modulus().save(stream);
+            double noise_standard_deviation = this->noise_standard_deviation();
             stream.write(reinterpret_cast<const char*>(&noise_standard_deviation), sizeof(double));
         }
         catch (const exception &)
@@ -39,7 +44,7 @@ namespace seal
         }
     }
 
-    EncryptionParameters EncryptionParameters::Load(istream &stream)
+    EncryptionParameters EncryptionParameters::load(istream &stream)
     {
         // Throw exceptions on std::ios_base::badbit and std::ios_base::failbit
         auto old_except_mask = stream.exceptions();

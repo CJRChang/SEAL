@@ -76,6 +76,11 @@ namespace seal
     {
     public:
         /**
+        Creates an empty set of encryption parameters.
+        */
+        EncryptionParameters();
+
+        /**
         Creates an empty set of encryption parameters. At a minimum, the user needs 
         to specify the parameters poly_modulus, coeff_modulus, and plain_modulus 
         for the parameters to be usable.
@@ -259,6 +264,13 @@ namespace seal
             random_generator_ = std::move(random_generator);
         }
 
+        // Overloaded function since pybind types aren't picked up neatly
+        inline void set_random_generator(
+                std::shared_ptr<FastPRNGFactory> random_generator)
+        {
+            random_generator_ = std::move(random_generator);
+        }
+
         /**
         Returns the encryption scheme type.
         */
@@ -361,7 +373,7 @@ namespace seal
         @throws std::exception if the EncryptionParameters could not be written 
         to stream
         */
-        static void Save(const EncryptionParameters &parms, std::ostream &stream);
+        void save(std::ostream &stream);
 
         /**
         Loads EncryptionParameters from an input stream.
@@ -370,7 +382,7 @@ namespace seal
         @throws std::exception if valid EncryptionParameters could not be read 
         from stream
         */
-        static EncryptionParameters Load(std::istream &stream);
+        EncryptionParameters load(std::istream &stream);
 
     private:
         void compute_parms_id();

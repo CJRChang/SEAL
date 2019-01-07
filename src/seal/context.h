@@ -120,7 +120,7 @@ namespace seal
     @see EncryptionParameters for more details on the parameters.
     @see EncryptionParameterQualifiers for more details on the qualifiers.
     */
-    class SEALContext
+    class SEALContext : public std::enable_shared_from_this<SEALContext>
     {
     public:
         class ContextData
